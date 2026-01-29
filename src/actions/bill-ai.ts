@@ -1,10 +1,9 @@
 "use server";
 
 import { generateObject } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google"; // Use Google instead of OpenAI
 import { z } from "zod";
 
-// This schema defines exactly what the AI should find in the bill image
 const billSchema = z.object({
   vendorName: z.string(),
   items: z.array(z.object({
@@ -18,13 +17,13 @@ const billSchema = z.object({
 
 export async function extractBillData(imageUrl: string) {
   const { object } = await generateObject({
-    model: openai("gpt-4o"), // High-fidelity vision model for reading receipts
+    model: google("gemini-1.5-flash"), // Gemini Flash is fast and free!
     schema: billSchema,
     messages: [
       {
         role: "user",
         content: [
-          { type: "text", text: "Extract line items from this office bill. Categorize each item strictly into Food, Stationery, or Toiletries." },
+          { type: "text", text: "Extract items from this bill for iLabs office inventory." },
           { type: "image", image: imageUrl },
         ],
       },
