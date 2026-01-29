@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google"; // Use Google instead of OpenAI
+import { google } from "@ai-sdk/google";
 import { z } from "zod";
 
 const billSchema = z.object({
@@ -10,25 +10,31 @@ const billSchema = z.object({
     name: z.string(),
     quantity: z.number().int().positive(),
     price: z.number().positive(),
-    category: z.enum(["Food", "Stationery", "Toiletries"])
+    category: z.string() // More flexible for testing
   })),
   total: z.number().positive(),
 });
 
 export async function extractBillData(imageUrl: string) {
-  const { object } = await generateObject({
-    model: google("gemini-1.5-flash"), // Gemini Flash is fast and free!
-    schema: billSchema,
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: "Extract items from this bill for iLabs office inventory." },
-          { type: "image", image: imageUrl },
-        ],
-      },
-    ],
-  });
+  try {
+    const { object } = await generateObject({
+      model: google("gemini-1.5-flash"), 
+      schema: billSchema,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Extract items from this bill for office inventory. If categories are unclear, use 'General'." },
+            { type: "image", image: imageUrl },
+          ],
+        },
+      ],
+    });
 
-  return object;
+    return object;
+  } catch (error) {
+    // This will print the REAL error in your VS Code terminal
+    console.error("Gemini AI Error:", error);
+    throw new Error("AI failed to process the image.");
+  }
 }
