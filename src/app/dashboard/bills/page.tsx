@@ -14,24 +14,25 @@ export default function BillsPage() {
   const [extractedData, setExtractedData] = useState<any>(null);
 
   const handleInstall = async () => {
-    setIsProcessing(true);
-    try {
-      const result = await installBillData(extractedData);
-      
-      if (result.success) {
-        toast.success("Inventory updated successfully!");
-        setExtractedData(null);
-      } else {
-        // Fix for ts(2339)
-        const err = result as { error?: string };
-        toast.error(err.error || "Failed to install data.");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred.");
-    } finally {
-      setIsProcessing(false);
+  setIsProcessing(true);
+  try {
+    // This calls the server action to save to Neon
+    const result = await installBillData(extractedData);
+    
+    if (result.success) {
+      toast.success("Inventory updated successfully!");
+      setExtractedData(null); // Clear the UI for the next bill
+    } else {
+      // Fix for the Property 'error' does not exist error
+      const errorMsg = (result as { error?: string }).error || "Failed to install data.";
+      toast.error(errorMsg);
     }
-  };
+  } catch (error) {
+    toast.error("An unexpected error occurred.");
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
