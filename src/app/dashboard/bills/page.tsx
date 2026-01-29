@@ -43,14 +43,22 @@ export default function BillsPage() {
           endpoint="billUploader"
           onUploadBegin={() => setIsProcessing(true)}
           onClientUploadComplete={async (res) => {
-            const data = await extractBillData(res[0].url);
-            setExtractedData(data);
-            setIsProcessing(false);
-            toast.success("AI Extraction Complete!");
-          }}
-          onUploadError={(error) => {
-            setIsProcessing(false);
-            toast.error("Upload failed.");
+            // 1. Get the URL of the uploaded image
+            const url = res[0].url; 
+  
+            try {
+              // 2. Start the AI extraction
+              setIsProcessing(true); // Show the spinner
+              const data = await extractBillData(url);
+    
+              // 3. Save the data to state so the Table appears
+              setExtractedData(data); 
+              toast.success("AI Extraction Complete!");
+            } catch (error) {
+              toast.error("AI failed to read the bill.");
+            } finally {
+              setIsProcessing(false);
+            }
           }}
         />
       ) : (
