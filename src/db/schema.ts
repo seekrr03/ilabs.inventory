@@ -30,10 +30,11 @@ export const inventory = pgTable("inventory", {
 // 4. Bills Table (Core Feature #3)
 // Stores the high-level data and the reference to the original receipt image
 export const bills = pgTable("bills", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  vendorId: uuid("vendor_id").references(() => vendors.id),
-  imageUrl: text("image_url").notNull(),
-  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  id: uuid("id").defaultRandom().primaryKey(),
+  vendorName: text("vendor_name"), // Added this column
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
+  status: text("status").default("pending"), // Added this column
+  imageUrl: text("image_url"),
   processedAt: timestamp("processed_at").defaultNow(),
 });
 
