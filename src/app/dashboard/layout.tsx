@@ -1,6 +1,7 @@
 // app/dashboard/layout.tsx
 import { Sidebar } from "@/components/nav/sidebar";
 import { UserNav } from "@/components/nav/user-nav";
+import "@uploadthing/react/styles.css";
 
 export default function DashboardLayout({
   children,
