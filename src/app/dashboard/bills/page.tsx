@@ -1,7 +1,7 @@
 "use client";
 import { UploadDropzone } from "@/lib/uploadthing"; // You'll need to create this util
 import { useState } from "react";
-import { extractBillData } from "@/app/actions/bill-ai";
+import { extractBillData } from "@/actions/bill-ai";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
