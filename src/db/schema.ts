@@ -1,55 +1,47 @@
-import { pgTable, uuid, text, integer, timestamp, pgEnum, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, timestamp, integer, decimal } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-// 1. Enums for fixed categories
-export const categoryEnum = pgEnum("category", ["Food", "Stationery", "Toiletries"]);
-
-// 2. Vendors Table (Core Feature #2)
+// 1. Vendors Table
 export const vendors = pgTable("vendors", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
-  contactPerson: text("contact_person"),
-  email: text("email"),
-  creditLimit: decimal("credit_limit", { precision: 10, scale: 2 }).default("0.00"),
-  currentBalance: decimal("current_balance", { precision: 10, scale: 2 }).default("0.00"),
+  contactEmail: text("contact_email"),
+  category: text("category"), // e.g., Food, Stationery
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// 3. Inventory Table (Core Feature #1)
-// Added .unique() to name to support stock upserts during bill processing
-export const inventory = pgTable("inventory", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull().unique(), 
-  category: categoryEnum("category").notNull(),
-  stockLevel: integer("stock_level").notNull().default(0),
-  minStockThreshold: integer("min_stock_threshold").notNull().default(5),
-  unit: text("unit").default("pcs"),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// 4. Bills Table (Core Feature #3)
-// Stores the high-level data and the reference to the original receipt image
+// 2. Bills Table (Updated for AI extraction)
 export const bills = pgTable("bills", {
   id: uuid("id").defaultRandom().primaryKey(),
-  vendorName: text("vendor_name"), // Added this column
-  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
-  status: text("status").default("pending"), // Added this column
+  vendorId: uuid("vendor_id").references(() => vendors.id), // Fixes image_2810f0
+  vendorName: text("vendor_name"), // Fixes image_287250
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").default("pending"), // Fixes image_286ec8
   imageUrl: text("image_url"),
   processedAt: timestamp("processed_at").defaultNow(),
 });
 
-// 5. Bill Items Table (Core Feature #3)
-// Stores the specific items extracted by AI from the bill
+// 3. Bill Items (Line items extracted by Gemini)
 export const billItems = pgTable("bill_items", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: uuid("id").defaultRandom().primaryKey(),
   billId: uuid("bill_id").references(() => bills.id, { onDelete: "cascade" }),
-  inventoryId: uuid("inventory_id").references(() => inventory.id),
+  name: text("name").notNull(),
   quantity: integer("quantity").notNull(),
-  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
 });
 
-// 6. Define Relations
-// This allows for clean "db.query" fetches like fetching a bill with all its items
+// 4. Inventory Table
+export const inventory = pgTable("inventory", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull().unique(),
+  category: text("category").notNull(),
+  stockLevel: integer("stock_level").default(0).notNull(),
+  minStockThreshold: integer("min_stock_threshold").default(5).notNull(), // Fixes image_280cd6
+  unit: text("unit").default("pcs"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// 5. Relations (For easier Drizzle queries)
 export const vendorsRelations = relations(vendors, ({ many }) => ({
   bills: many(bills),
 }));
@@ -66,9 +58,5 @@ export const billItemsRelations = relations(billItems, ({ one }) => ({
   bill: one(bills, {
     fields: [billItems.billId],
     references: [bills.id],
-  }),
-  inventory: one(inventory, {
-    fields: [billItems.inventoryId],
-    references: [inventory.id],
   }),
 }));
