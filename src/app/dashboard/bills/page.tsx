@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { UploadDropzone } from "@/lib/uploadthing";
-import { extractBillData } from "@/actions/bill-ai";
+import { extractBillData } from "@/actions/bill-ai"; // Pointing to the new folder location
 import { toast } from "sonner";
 
 export default function BillsPage() {
@@ -10,8 +10,8 @@ export default function BillsPage() {
   const [extractedData, setExtractedData] = useState<any>(null);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">iLabs Bill Processing (Debug Mode)</h1>
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold">iLabs Bill Processing</h1>
       
       {!extractedData ? (
         <UploadDropzone
@@ -21,14 +21,12 @@ export default function BillsPage() {
             setIsProcessing(true);
           }}
           onClientUploadComplete={async (res) => {
-            console.log("✅ Upload Finished! Response:", res);
-            const url = res[0].url;
-            console.log("📂 File URL:", url);
-            
+            console.log("✅ Upload Successful! Res:", res);
             try {
-              console.log("🤖 Calling Gemini AI...");
+              const url = res[0].url;
+              console.log("🤖 Sending URL to Gemini:", url);
               const data = await extractBillData(url);
-              console.log("📊 Gemini Result:", data);
+              console.log("📊 Gemini returned:", data);
               setExtractedData(data);
               toast.success("AI Extraction Complete!");
             } catch (error) {
@@ -38,7 +36,7 @@ export default function BillsPage() {
               setIsProcessing(false);
             }
           }}
-          onUploadError={(error: Error) => {
+          onUploadError={(error) => {
             console.error("⚠️ UploadThing Error:", error.message);
             setIsProcessing(false);
             toast.error(`Upload Error: ${error.message}`);
@@ -46,12 +44,11 @@ export default function BillsPage() {
         />
       ) : (
         <div>
-          <h2>Data Found!</h2>
-          <pre>{JSON.stringify(extractedData, null, 2)}</pre>
+           {/* Your existing Table/Confirm UI goes here */}
+           <pre>{JSON.stringify(extractedData, null, 2)}</pre>
+           <button onClick={() => setExtractedData(null)}>Clear</button>
         </div>
       )}
-
-      {isProcessing && <p className="mt-4 animate-pulse">Checking console for logs...</p>}
     </div>
   );
 }
